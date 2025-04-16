@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Setup Quiz</title>
+</head>
+<body>
+    <h1>Impostazioni Quiz</h1>
+    <form method="POST">
+        <div>
+            <label for="time_limit">Tempo limite totale (in secondi):</label>
+            <input type="number" id="time_limit" name="time_limit" value="60" required>
+        </div>
+        <br>
+        <div>
+            <label for="topics">Inserisci gli argomenti del quiz (uno per riga):</label><br>
+            <textarea id="topics" name="topics" rows="5"></textarea>
+        </div>
+        <br>
+        <input type="submit" value="Salva e Vai al Quiz">
+    </form>
+    <br>
+    <a href="{{ url_for('index') }}">Torna alla pagina iniziale</a>
+</body>
+</html>
