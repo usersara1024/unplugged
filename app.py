@@ -13,7 +13,8 @@ current_question_data = None
 questions = [
     {"domanda": "Qual è la capitale d'Italia?", "risposta": "Roma"},
     {"domanda": "Quanto fa 2 + 2?", "risposta": "4"},
-    {"domanda": "Qual è un linguaggio di programmazione molto usato?", "risposta": "Python"}
+    {"domanda": "Qual è un linguaggio di programmazione molto usato?", "risposta": "Python"},
+    {"domanda": "Come stai?"}
     # Aggiungi qui altre domande e risposte!
 ]
 
