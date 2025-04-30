@@ -1,94 +1,203 @@
 document.addEventListener('DOMContentLoaded', function() {
+    console.log("DOM Caricato. Inizio esecuzione script."); // Log iniziale
+
+    // --- Elementi DOM ---
     const timerDisplay = document.getElementById('timer-display');
     const startButton = document.getElementById('start-button');
     const scoreDisplay = document.getElementById('score');
-    const controlsDiv = document.getElementById('controls'); // Get controls div
+    const controlsDiv = document.getElementById('controls');
     const bodyElement = document.body;
     const bgSelect = document.getElementById('bg-select');
-    let timerInterval = null; // Inizializza a null
+    let timerInterval = null; // Variabile per l'intervallo
 
-    // ... (Funzioni formatTime, updateTimer, applyBackground, backgroundsListIncludes come prima) ...
-    // Assicurati che updateTimer usi innerHTML per timerDisplay
-    // function formatTime(...) { ... }
-    // function updateTimer() { ... timerDisplay.innerHTML = formatTime(data.time_remaining); ... }
+    // --- Controllo Elementi Essenziali ---
+    if (!timerDisplay) console.error("ERRORE: Elemento timer-display non trovato!");
+    if (!bodyElement) console.error("ERRORE: Elemento body non trovato!");
+    // Non è un errore se startButton o bgSelect non ci sono (dipende dallo stato)
+    if (startButton) console.log("Pulsante Start trovato.");
+    else console.log("Pulsante Start NON trovato (timer forse già attivo?).");
+    if (bgSelect) console.log("Selettore Sfondo trovato.");
+    else console.log("Selettore Sfondo NON trovato.");
 
-    // --- Gestione Pulsante Avvio ---
+
+    // --- Funzioni ---
+
+    // Funzione per formattare il tempo (MM:SS)
+    function formatTime(seconds) {
+        if (isNaN(seconds) || seconds < 0) {
+            return "--:--";
+        }
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
+    }
+
+    // Funzione per aggiornare il timer (chiamata a /get_time)
+    function updateTimer() {
+        console.log("Chiamata a updateTimer..."); // Log chiamata funzione
+        if (!timerDisplay) return; // Non fare nulla se il display non esiste
+
+        fetch('/get_time')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Errore HTTP ${response.status} da /get_time`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log("Dati ricevuti da /get_time:", data); // Log dati ricevuti
+                if (data.error) {
+                    console.error("Errore dal server (/get_time):", data.error);
+                    if (timerInterval) clearInterval(timerInterval);
+                    timerDisplay.innerHTML = "Errore Server";
+                    return;
+                }
+
+                // Aggiorna display tempo
+                timerDisplay.innerHTML = formatTime(data.time_remaining);
+
+                // Aggiorna punteggio (se presente)
+                if (scoreDisplay && data.score !== undefined) {
+                     scoreDisplay.innerText = data.score;
+                }
+
+                // Gestione fine timer e reindirizzamento
+                if (data.should_redirect && data.redirect_url) {
+                    console.log("Tempo scaduto o reindirizzamento richiesto dal server. Vado a:", data.redirect_url);
+                    if (timerInterval) clearInterval(timerInterval);
+                    timerInterval = null;
+                    window.location.href = data.redirect_url; // Reindirizza!
+                } else if (!data.timer_running) {
+                    // Se il timer NON è in esecuzione e NON dobbiamo reindirizzare
+                    console.log("Il server indica che il timer non è in esecuzione.");
+                    if (timerInterval) {
+                        console.log("Fermo l'intervallo timer client.");
+                        clearInterval(timerInterval);
+                        timerInterval = null;
+                    }
+                    // Riattiva il pulsante Start se esiste e non è già attivo
+                    if (startButton && startButton.disabled) {
+                        console.log("Riattivo il pulsante Start.");
+                        startButton.disabled = false;
+                    }
+                     // Assicurati che il messaggio "in corso" sia rimosso se il bottone riappare
+                    if (controlsDiv && startButton) {
+                         if (!controlsDiv.contains(startButton)) {
+                             controlsDiv.innerHTML = ''; // Pulisci
+                             controlsDiv.appendChild(startButton); // Rimetti il bottone
+                         }
+                    }
+
+                } else {
+                     // Il timer è in esecuzione secondo il server
+                     console.log("Il server indica che il timer è in esecuzione.");
+                }
+            })
+            .catch(error => {
+                console.error('Errore grave durante fetch /get_time:', error);
+                if (timerDisplay) timerDisplay.innerHTML = "Errore Rete";
+                if (timerInterval) clearInterval(timerInterval);
+                timerInterval = null;
+            });
+    }
+
+    // Funzione per applicare lo sfondo (SOLO cambio classe, senza localStorage per ora)
+    function applyBackground(backgroundValue) {
+         const valueOrDefault = backgroundValue || 'default';
+         console.log("Applico sfondo:", valueOrDefault);
+         // Rimuovi classi bg- precedenti
+         bodyElement.className = bodyElement.className.replace(/\bbg-\S+/g, '');
+         // Aggiungi la nuova classe
+         bodyElement.classList.add(`bg-${valueOrDefault}`);
+    }
+
+    // --- Logica Esecuzione Iniziale ---
+
+    // 1. Gestione Sfondo Iniziale e Selezione
+    if (bgSelect) {
+        // Lista sfondi (deve corrispondere ai valori 'value' e classi CSS)
+         const availableBackgrounds = ['default', 'forest', 'space', 'abstract'];
+
+         // Imposta lo sfondo iniziale su 'default' o sul valore selezionato se valido
+         let initialBg = bgSelect.value;
+         if (!availableBackgrounds.includes(initialBg)) {
+             console.warn(`Valore iniziale sfondo '${initialBg}' non valido, uso default.`);
+             initialBg = 'default';
+             bgSelect.value = initialBg; // Aggiorna il dropdown
+         }
+         applyBackground(initialBg);
+
+        // Listener per cambi futuri
+        bgSelect.addEventListener('change', function() {
+            if (availableBackgrounds.includes(this.value)) {
+                applyBackground(this.value);
+                // Qui potresti riattivare localStorage se necessario:
+                // try { localStorage.setItem('backgroundPreference', this.value); } catch(e){}
+            } else {
+                 console.warn(`Valore selezionato '${this.value}' non valido.`);
+                 applyBackground('default'); // Fallback a default
+                 this.value = 'default'; // Resetta dropdown
+            }
+        });
+         console.log("Listener per cambio sfondo aggiunto.");
+    } else {
+         // Se non c'è selettore, applica default
+         applyBackground('default');
+    }
+
+
+    // 2. Gestione Avvio Timer tramite Pulsante
     if (startButton) {
         startButton.addEventListener('click', function() {
-            startButton.disabled = true; // Disabilita subito
+            console.log("Click su Start rilevato.");
+            startButton.disabled = true;
+            if (controlsDiv) controlsDiv.innerHTML = "<p>Avvio sessione...</p>"; // Messaggio temporaneo
+
             fetch('/start_timer', { method: 'POST' })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) throw new Error(`Errore HTTP ${response.status} da /start_timer`);
+                    return response.json();
+                })
                 .then(data => {
+                    console.log("Risposta da /start_timer:", data);
                     if (data.success) {
-                        console.log("Timer avviato con successo dal server.");
-                        // Aggiorna subito il display e lo stato visivo
-                        if (controlsDiv) {
-                            controlsDiv.innerHTML = "<p>Sessione di studio in corso...</p>";
-                        }
-                        // Chiamata immediata per mostrare il tempo e verificare lo stato
-                        updateTimer();
-                        // Avvia l'intervallo *dopo* la prima chiamata
-                        if (timerInterval) clearInterval(timerInterval); // Pulisci intervalli precedenti se esistono
+                        console.log("Avvio timer Riuscito.");
+                        if (controlsDiv) controlsDiv.innerHTML = "<p>Sessione di studio in corso...</p>";
+
+                        // Pulisci intervalli vecchi e avvia quello nuovo
+                        if (timerInterval) clearInterval(timerInterval);
                         timerInterval = setInterval(updateTimer, 1000);
+
+                        // Chiama subito update per aggiornare il display immediatamente
+                        updateTimer();
+
                     } else {
-                        console.error("Errore avvio timer:", data.error);
+                        console.error("Avvio timer Fallito:", data.error);
                         alert("Impossibile avviare il timer: " + (data.error || 'Errore sconosciuto'));
-                        startButton.disabled = false; // Riabilita se fallisce
+                        startButton.disabled = false; // Riabilita
+                        if (controlsDiv) controlsDiv.innerHTML = ''; controlsDiv.appendChild(startButton); // Rimetti bottone
                     }
                 })
                 .catch(error => {
-                    console.error('Errore fetch /start_timer:', error);
+                    console.error('Errore grave fetch /start_timer:', error);
                     alert("Errore di comunicazione con il server per avviare il timer.");
-                    startButton.disabled = false; // Riabilita in caso di errore
+                    startButton.disabled = false;
+                     if (controlsDiv) controlsDiv.innerHTML = ''; controlsDiv.appendChild(startButton); // Rimetti bottone
                 });
         });
     }
 
-    // --- Gestione Selezione Sfondo (come prima) ---
-    if (bgSelect) {
-        // ... (codice per applyBackground, event listener 'change', caricamento da localStorage) ...
-         // Funzione helper per controllare se il valore salvato è tra quelli disponibili
-         const availableBackgrounds = ['default', 'forest', 'space', 'abstract'];
-         function backgroundsListIncludes(value) {
-              return availableBackgrounds.includes(value);
-         }
-         // Funzione per applicare la classe dello sfondo
-         function applyBackground(backgroundValue) {
-             // Rimuovi classi bg- precedenti
-             bodyElement.className = bodyElement.className.replace(/\bbg-\S+/g, '');
-             // Aggiungi la nuova classe (o default)
-             bodyElement.classList.add(`bg-${backgroundValue || 'default'}`);
-         }
-         // Event listener e caricamento localStorage... (vedi codice risposta precedente)
-           bgSelect.addEventListener('change', function() { /* ... applyBackground ... localStorage.setItem ... */ });
-           let savedBg = null; try { savedBg = localStorage.getItem('backgroundPreference'); } catch(e){}
-           if (savedBg && backgroundsListIncludes(savedBg)) { bgSelect.value = savedBg; applyBackground(savedBg); }
-           else { const defaultBg = 'default'; bgSelect.value = defaultBg; applyBackground(defaultBg); }
+    // 3. Aggiornamento Iniziale e Avvio Intervallo (se timer già attivo)
+    console.log("Eseguo updateTimer iniziale...");
+    updateTimer(); // Chiamata per ottenere stato iniziale e tempo
 
-    } else {
-        // Se il selettore non esiste, applica comunque il default
-        bodyElement.classList.add('bg-default');
-    }
-
-
-    // --- Aggiornamento Iniziale e Periodico ---
-    // Chiama subito updateTimer per ottenere lo stato corrente (tempo, stato running)
-    updateTimer();
-
-    // Controlla se il timer dovrebbe essere già in esecuzione (basato sull'assenza del bottone Start)
-    // e avvia l'intervallo SOLO se non è già stato avviato dal click
+    // Se il pulsante NON esiste, significa che la pagina è stata caricata
+    // con il timer già attivo lato server. Avviamo l'intervallo client.
     if (!startButton && !timerInterval) {
-         // Verifica ulteriore se il server dice che è in esecuzione
-         fetch('/get_time').then(res => res.json()).then(data => {
-             if(data.timer_running && !timerInterval) {
-                 console.log("Timer già in corso (rilevato al caricamento), avvio aggiornamento periodico.");
-                 timerInterval = setInterval(updateTimer, 1000);
-             } else if (!data.timer_running && timerInterval) {
-                 // Se il server dice che NON è in corso, ma abbiamo un intervallo, fermalo.
-                 clearInterval(timerInterval);
-                 timerInterval = null;
-             }
-         }).catch(e => console.error("Errore nel check iniziale get_time:", e));
+         console.log("Pulsante non trovato, presumo timer già attivo. Avvio intervallo client.");
+         timerInterval = setInterval(updateTimer, 1000);
     }
+
+    console.log("Fine inizializzazione script.");
 
 }); // Fine DOMContentLoaded

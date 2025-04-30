@@ -1,5 +1,9 @@
 import os
-import json
+
+import os
+from google import genai
+from google.genai import types
+
 import random
 import time
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
@@ -9,8 +13,66 @@ app = Flask(__name__)
 app.secret_key = os.urandom(24)
 
 # Impostazioni predefinite
-DEFAULT_TIME_LIMIT = 600  # 10 minuti
-CORRECT_ANSWER_BONUS = 30 # 30 secondi bonus
+DEFAULT_TIME_LIMIT = 10  # 10 minuti
+CORRECT_ANSWER_BONUS = 10 # 30 secondi bonus
+
+
+
+def generate(argomento):
+    client = genai.Client(
+        api_key=os.environ.get("GEMINI_API_KEY"),
+    )
+
+    model = "gemini-2.0-flash"
+    contents = [
+        types.Content(
+            role="user",
+            parts=[
+                types.Part.from_text(text="""
+                                     Agisci come un generatore di domande per un'applicazione educativa rivolta a studenti di scuola secondaria.
+
+Considera i seguenti parametri per la generazione della domanda:
+- Argomento fornito da genitori/professori: {argomento}
+                                     - Livello scolare: Scuola secondaria 
+- Tipo di domanda desiderato: multipla
+Genera una domanda pertinente all'argomento e al livello scolare specificati. Se il tipo di domanda è "multipla", fornisci anche un array di 3-4 risposte plausibili e l'indice (a base zero) della risposta corretta.
+"""),
+            ],
+        ),
+    ]
+    generate_content_config = types.GenerateContentConfig(
+        thinking_config = types.ThinkingConfig(
+            thinking_budget=0,
+        ),
+        response_mime_type="application/json",
+        response_schema=genai.types.Schema(
+                        type = genai.types.Type.OBJECT,
+                        required = ["domanda", "risposte", "indice_risposta_corretta"],
+                        properties = {
+                            "domanda": genai.types.Schema(
+                                type = genai.types.Type.STRING,
+                            ),
+                            "risposte": genai.types.Schema(
+                                type = genai.types.Type.ARRAY,
+                                items = genai.types.Schema(
+                                    type = genai.types.Type.STRING,
+                                ),
+                            ),
+                            "indice_risposta_corretta": genai.types.Schema(
+                                type = genai.types.Type.INTEGER,
+                            ),
+                        },
+                    ),
+    )
+
+    testo = ""
+    for chunk in client.models.generate_content_stream(
+        model=model,
+        contents=contents,
+        config=generate_content_config,
+    ):
+        testo += chunk.text
+    return testo
 
 # --- Funzione Placeholder per Gemini ---
 def generate_question_from_gemini(topics):
@@ -18,27 +80,24 @@ def generate_question_from_gemini(topics):
     Placeholder per la chiamata all'API di Gemini.
     Restituisce una domanda fittizia in formato JSON basata sugli argomenti.
     """
+
+
     print(f"--- Chiamata Fittizia a Gemini con argomenti: {topics} ---")
     # Scegli un argomento a caso dalla lista fornita
     chosen_topic = random.choice(topics) if topics else "un argomento generico"
 
+    domanda = generate(chosen_topic)
+    console.log(domanda)
     # Genera casualmente un tipo di domanda
-    question_type = random.choice(["multipla", "aperta"])
+#    question_type = random.choice(["multipla", "aperta"])
 
-    if question_type == "multipla":
-        possible_answers = [f"Risposta A per {chosen_topic}", f"Risposta B per {chosen_topic}", f"Risposta C per {chosen_topic}", f"Risposta D per {chosen_topic}"]
-        correct_index = random.randint(0, len(possible_answers) - 1)
-        return {
-          "domanda": f"Domanda a scelta multipla su: {chosen_topic}?",
-          "tipo": "multipla",
-          "risposte": possible_answers,
-          "indice_risposta_corretta": correct_index
-        }
-    else: # Tipo "aperta"
-         return {
-          "domanda": f"Descrivi apertamente qualcosa riguardo: {chosen_topic}.",
-          "tipo": "aperta"
-        }
+    possible_answers = [f"Risposta A per {chosen_topic}", f"Risposta B per {chosen_topic}", f"Risposta C per {chosen_topic}", f"Risposta D per {chosen_topic}"]
+    correct_index = random.randint(0, len(possible_answers) - 1)
+    return {
+        "domanda": f"Domanda a scelta multipla su: {chosen_topic}?",
+        "risposte": possible_answers,
+        "indice_risposta_corretta": correct_index
+    }
 # -------------------------------------
 
 @app.route('/', methods=['GET', 'POST'])
@@ -125,13 +184,7 @@ def professor_parent_setup():
 @app.route('/student')
 def student_view():
     """Pagina principale per lo studente con il timer."""
-    if session.get('user_type') != 'student':
-        # Se un prof/genitore accede a /student, usa le impostazioni salvate
-         if session.get('user_type') in ['professor', 'parent']:
-             pass # Possono vedere la pagina studente con le impostazioni correnti
-         else:
-             return redirect(url_for('index')) # Altrimenti torna all'inizio
-
+  
     # Assicurati che il tempo rimanente sia inizializzato correttamente
     if 'time_remaining' not in session:
          session['time_remaining'] = session.get('time_limit', DEFAULT_TIME_LIMIT)
@@ -150,15 +203,13 @@ def student_view():
 @app.route('/start_timer', methods=['POST'])
 def start_timer():
     """Avvia il timer per lo studente."""
-    if session.get('user_type') == 'student' and not session.get('timer_running', False):
-        session['timer_running'] = True
-        # Registra il tempo di inizio *server-side*
-        session['timer_start_time'] = time.time()
-        # Imposta il tempo rimanente iniziale al momento dell'avvio effettivo
-        session['time_remaining'] = session.get('time_limit', DEFAULT_TIME_LIMIT)
-        print("Timer avviato!")
-        return jsonify({'success': True, 'time_remaining': session['time_remaining']})
-    return jsonify({'success': False, 'error': 'Timer già avviato o utente non autorizzato.'})
+    session['timer_running'] = True
+    # Registra il tempo di inizio *server-side*
+    session['timer_start_time'] = time.time()
+    # Imposta il tempo rimanente iniziale al momento dell'avvio effettivo
+    session['time_remaining'] = session.get('time_limit', DEFAULT_TIME_LIMIT)
+    print("Timer avviato!")
+    return jsonify({'success': True, 'time_remaining': session['time_remaining']})
 
 @app.route('/get_time')
 def get_time():
