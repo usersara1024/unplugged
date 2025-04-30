@@ -1,40 +1,55 @@
 <!DOCTYPE html>
-<html>
+<html lang="it">
 <head>
-    <title>Quiz per Studenti</title>
-    <script>
-        function aggiornaTimer() {
-            fetch('/get_time')
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('tempo-rimanente').innerText = data.time_remaining;
-                if (data.time_remaining <= 0 && data.timer_running) {
-                    window.location.href = '/ask'; // Vai alla domanda quando il tempo scade
-                } else if (data.timer_running) {
-                    setTimeout(aggiornaTimer, 1000); // Aggiorna ogni secondo
-                }
-            });
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            aggiornaTimer(); // Inizia ad aggiornare il timer quando la pagina si carica
-        });
-
-        function avviaTimer() {
-            window.location.href = '/start_timer';
-        }
-    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Area Studente - App Studio</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 30px auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; text-align: center; }
+        #timer-display { font-size: 2.5em; font-weight: bold; margin: 20px 0; padding: 15px; background-color: #f0f0f0; border-radius: 5px; display: inline-block; min-width: 150px; }
+        #start-button { padding: 12px 25px; font-size: 1.1em; background-color: #007bff; color: white; border: none; cursor: pointer; border-radius: 5px; }
+        #start-button:hover { background-color: #0056b3; }
+        #start-button:disabled { background-color: #ccc; cursor: not-allowed; }
+        #background-selector label { margin-right: 10px; }
+        #background-selector select { padding: 5px; }
+        .score { margin-top: 20px; font-size: 1.2em; }
+        .footer-links { margin-top: 30px; }
+        .footer-links a { margin: 0 10px; color: #007bff; text-decoration: none; }
+         .footer-links a:hover { text-decoration: underline; }
+    </style>
 </head>
 <body>
     <h1>Benvenuto Studente!</h1>
-    <p>Tempo rimanente: <span id="tempo-rimanente">{{ time_remaining }}</span> secondi</p>
-    {% if not timer_running %}
-        <button onclick="avviaTimer()">Inizia il Quiz</button>
-    {% endif %}
-    {% if timer_running %}
-        <p>Il quiz è iniziato!</p>
-    {% endif %}
-    <br>
-    <a href="{{ url_for('index') }}">Torna alla pagina iniziale</a>
+
+    <p>Tempo a disposizione:</p>
+    <div id="timer-display">--:--</div>
+
+    <div id="controls">
+        {% if not timer_running %}
+            <button id="start-button">Inizia Sessione di Studio</button>
+        {% else %}
+            <p>Sessione di studio in corso...</p>
+        {% endif %}
+    </div>
+
+    <div class="score">Punteggio: <span id="score">{{ score }}</span></div>
+
+    <div id="background-selector" style="margin-top: 30px;">
+        <label for="bg-select">Scegli uno sfondo:</label>
+        <select id="bg-select" name="background">
+            {% for bg in backgrounds %}
+            <option value="{{ bg|lower }}">{{ bg }}</option>
+            {% endfor %}
+        </select>
+        </div>
+
+    <div class="footer-links">
+        <a href="{{ url_for('index') }}">Esci</a>
+         {% if session.user_type in ['professor', 'parent'] %}
+            | <a href="{{ url_for('professor_parent_setup') }}">Torna alle Impostazioni</a>
+         {% endif %}
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 </html>

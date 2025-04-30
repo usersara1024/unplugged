@@ -1,12 +1,20 @@
 <!DOCTYPE html>
-<html>
+<html lang="it">
 <head>
-    <title>Risultato</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Risultato - App Studio</title>
+     <style>
+        body { font-family: sans-serif; max-width: 600px; margin: 50px auto; padding: 30px; border: 1px solid #ccc; border-radius: 8px; text-align: center; }
+        h1 { color: #333; }
+        p { font-size: 1.2em; margin-bottom: 25px; }
+        a { display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px; }
+        a:hover { background-color: #0056b3; }
+    </style>
 </head>
 <body>
     <h1>Risultato</h1>
     <p>{{ message }}</p>
-    <br>
-    <a href="{{ url_for('student_view') }}">Torna alla pagina principale</a>
+    <a href="{{ url_for('student_view') }}">Continua a Studiare</a>
 </body>
-</html> 
+</html>

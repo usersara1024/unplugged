@@ -1,16 +1,54 @@
 <!DOCTYPE html>
-<html>
+<html lang="it">
 <head>
-    <title>Domanda</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Domanda - App Studio</title>
+    <style>
+        body { font-family: sans-serif; max-width: 700px; margin: 50px auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
+        h1 { text-align: center; }
+        .question-text { font-size: 1.2em; margin-bottom: 25px; padding: 15px; background-color: #e9f5ff; border-left: 5px solid #007bff; }
+        .answers label { display: block; margin-bottom: 10px; padding: 10px; border: 1px solid #eee; border-radius: 4px; cursor: pointer; }
+        .answers label:hover { background-color: #f8f9fa; }
+        .answers input[type="radio"] { margin-right: 10px; }
+        textarea[name="answer"] { width: 100%; min-height: 80px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 15px; box-sizing: border-box;}
+        input[type="submit"] { padding: 10px 20px; background-color: #28a745; color: white; border: none; cursor: pointer; border-radius: 4px; font-size: 1em; }
+        input[type="submit"]:hover { background-color: #218838; }
+    </style>
 </head>
 <body>
-    <h1>Domanda</h1>
-    <p>{{ question }}</p>
-    <form method="POST" action="{{ url_for('submit_answer') }}">
-        <input type="text" name="answer" required>
-        <input type="submit" value="Invia Risposta">
-    </form>
-    <br>
-    <a href="{{ url_for('student_view') }}">Torna alla pagina principale</a>
+    <h1>Rispondi alla Domanda</h1>
+
+    {% if question_data %}
+        <div class="question-text">
+            {{ question_data.domanda }}
+        </div>
+
+        <form method="POST" action="{{ url_for('submit_answer') }}">
+            {% if question_data.tipo == 'multipla' %}
+                <div class="answers">
+                    {% for answer in question_data.risposte %}
+                    <label>
+                        <input type="radio" name="answer" value="{{ loop.index0 }}" required>
+                        {{ answer }}
+                    </label>
+                    {% endfor %}
+                </div>
+            {% elif question_data.tipo == 'aperta' %}
+                <div>
+                    <label for="open_answer">La tua risposta:</label>
+                    <textarea id="open_answer" name="answer" required></textarea>
+                </div>
+            {% else %}
+                <p>Errore: Tipo di domanda non riconosciuto.</p>
+            {% endif %}
+
+            <input type="submit" value="Invia Risposta">
+        </form>
+    {% else %}
+        <p>Nessuna domanda disponibile al momento.</p>
+        <p><a href="{{ url_for('student_view') }}">Torna alla pagina studente</a></p>
+    {% endif %}
+
 </body>
 </html>
