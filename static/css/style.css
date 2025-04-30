@@ -1,0 +1,148 @@
+/* static/css/style.css */
+
+/* Stili generali */
+body {
+    font-family: sans-serif;
+    max-width: 800px;
+    margin: 30px auto;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    text-align: center;
+    transition: background-color 0.5s ease, background-image 0.5s ease, color 0.5s ease; /* Aggiunta transizione colore testo */
+}
+
+#timer-display {
+    font-size: 2.5em;
+    font-weight: bold;
+    margin: 20px 0;
+    padding: 15px;
+    background-color: #f0f0f0; /* Colore base, verrà sovrascritto dai temi */
+    border-radius: 5px;
+    display: inline-block;
+    min-width: 150px;
+    border: 1px solid transparent; /* Aggiunto bordo trasparente per consistenza */
+     transition: background-color 0.5s ease, border-color 0.5s ease;
+}
+
+#start-button {
+    padding: 12px 25px;
+    font-size: 1.1em;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+#start-button:hover {
+    background-color: #0056b3;
+}
+
+#start-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+#controls p { /* Stile per il messaggio "Sessione in corso..." */
+    font-style: italic;
+    color: #555; /* Colore base, potrebbe essere sovrascritto dai temi */
+    transition: color 0.5s ease;
+}
+
+
+#background-selector {
+    margin-top: 30px;
+}
+
+#background-selector label {
+    margin-right: 10px;
+     /* Colore base, sovrascritto dai temi */
+     transition: color 0.5s ease;
+}
+
+#background-selector select {
+    padding: 5px 8px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+     transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease;
+}
+
+.score {
+    margin-top: 20px;
+    font-size: 1.2em;
+     /* Colore base, sovrascritto dai temi */
+     transition: color 0.5s ease;
+}
+.score span {
+    font-weight: bold;
+}
+
+.footer-links {
+    margin-top: 30px;
+}
+
+.footer-links a {
+    margin: 0 10px;
+    color: #007bff; /* Colore base, sovrascritto dai temi */
+    text-decoration: none;
+     transition: color 0.5s ease;
+}
+
+ .footer-links a:hover {
+    text-decoration: underline;
+}
+
+
+/* --- Stili Sfondi --- */
+
+/* Sfondo Default (Bianco) */
+body.bg-default {
+     background-color: #ffffff;
+     background-image: none;
+     color: #333; /* Testo scuro */
+     border-color: #ddd;
+}
+body.bg-default h1, body.bg-default p, body.bg-default label, body.bg-default .score, body.bg-default #controls p { color: #333; }
+body.bg-default #timer-display { background-color: #f0f0f0; border-color: #ddd; color: #333;}
+body.bg-default a { color: #007bff; }
+body.bg-default select { background-color: #fff; color: #333; border-color: #ccc;}
+
+
+/* Sfondo Forest (Verde Scuro) */
+body.bg-forest {
+     background-color: #1a4d2e;
+     background-image: none;
+     color: #e0e0e0;
+     border-color: #4b836a;
+}
+body.bg-forest h1, body.bg-forest p, body.bg-forest label, body.bg-forest .score, body.bg-forest #controls p { color: #f0f0f0; }
+body.bg-forest #timer-display { background-color: rgba(255, 255, 255, 0.15); border-color: rgba(255, 255, 255, 0.3); color: #f0f0f0;}
+body.bg-forest a { color: #90ee90; }
+body.bg-forest select { background-color: #2a644a; color: #fff; border-color: #4b836a;}
+
+
+/* Sfondo Space (Blu Scuro/Nero) */
+body.bg-space {
+     background-color: #0c1445;
+     background-image: none;
+     color: #e0e0e0;
+      border-color: #3c4a8a;
+}
+body.bg-space h1, body.bg-space p, body.bg-space label, body.bg-space .score, body.bg-space #controls p { color: #f0f0f0; }
+body.bg-space #timer-display { background-color: rgba(255, 255, 255, 0.15); border-color: rgba(255, 255, 255, 0.3); color: #f0f0f0; }
+body.bg-space a { color: #add8e6; }
+ body.bg-space select { background-color: #1c2a6a; color: #fff; border-color: #3c4a8a;}
+
+
+/* Sfondo Abstract (Gradiente) */
+body.bg-abstract {
+     background-image: linear-gradient(120deg, #f6d365 0%, #fda085 100%);
+     color: #444;
+      border-color: #f8c177;
+}
+ body.bg-abstract h1, body.bg-abstract p, body.bg-abstract label, body.bg-abstract .score, body.bg-abstract #controls p { color: #333; }
+ body.bg-abstract #timer-display { background-color: rgba(255, 255, 255, 0.4); border-color: rgba(0, 0, 0, 0.1); color: #333;}
+ body.bg-abstract a { color: #d9534f; }
+ body.bg-abstract select { background-color: rgba(255, 255, 255, 0.7); color: #333; border-color: #fda085;}

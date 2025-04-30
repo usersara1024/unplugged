@@ -299,8 +299,8 @@ def submit_answer():
 
 
 if __name__ == '__main__':
-    # Crea la directory 'data' se non esiste (opzionale se non usi file JSON)
-    # os.makedirs('data', exist_ok=True)
     # Crea la directory 'static/js' se non esiste
     os.makedirs('static/js', exist_ok=True)
-    app.run(debug=True, port=5001) # Usa una porta diversa se la 5000 è occupata
+    # Aggiungi: Crea la directory 'static/css' se non esiste
+    os.makedirs('static/css', exist_ok=True) # <<< AGGIUNGI QUESTA LINEA
+    app.run(debug=True, port=5001)
