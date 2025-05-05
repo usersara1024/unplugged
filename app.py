@@ -87,10 +87,20 @@ def generate_question_from_gemini(topics):
     chosen_topic = random.choice(topics) if topics else "un argomento generico"
 
     domanda = generate(chosen_topic)
-    console.log(domanda)
+
+    domanda = json_string.replace("'", "\"")
+
+# Ora possiamo usare json.loads() per convertire la stringa in un dizionario Python
+    try:
+        data_dict = json.loads(domanda)
+        print(data_dict)
+    except json.JSONDecodeError as e:
+        print(f"Errore nella decodifica JSON: {e}")
+        print(f"Stringa JSON non valida: {json_string}")
+
     # Genera casualmente un tipo di domanda
 #    question_type = random.choice(["multipla", "aperta"])
-
+    return data_dict
     possible_answers = [f"Risposta A per {chosen_topic}", f"Risposta B per {chosen_topic}", f"Risposta C per {chosen_topic}", f"Risposta D per {chosen_topic}"]
     correct_index = random.randint(0, len(possible_answers) - 1)
     return {

@@ -25,23 +25,15 @@
         </div>
 
         <form method="POST" action="{{ url_for('submit_answer') }}">
-            {% if question_data.tipo == 'multipla' %}
-                <div class="answers">
-                    {% for answer in question_data.risposte %}
-                    <label>
-                        <input type="radio" name="answer" value="{{ loop.index0 }}" required>
-                        {{ answer }}
-                    </label>
-                    {% endfor %}
-                </div>
-            {% elif question_data.tipo == 'aperta' %}
-                <div>
-                    <label for="open_answer">La tua risposta:</label>
-                    <textarea id="open_answer" name="answer" required></textarea>
-                </div>
-            {% else %}
-                <p>Errore: Tipo di domanda non riconosciuto.</p>
-            {% endif %}
+            <div class="answers">
+                {% for answer in question_data.risposte %}
+                <label>
+                    <input type="radio" name="answer" value="{{ loop.index0 }}" required>
+                    {{ answer }}
+                </label>
+                {% endfor %}
+            </div>
+
 
             <input type="submit" value="Invia Risposta">
         </form>
