@@ -3,7 +3,7 @@ import os
 import os
 from google import genai
 from google.genai import types
-
+import json
 import random
 import time
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
@@ -28,14 +28,14 @@ def generate(argomento):
         types.Content(
             role="user",
             parts=[
-                types.Part.from_text(text="""
+                types.Part.from_text(text=f"""
                                      Agisci come un generatore di domande per un'applicazione educativa rivolta a studenti di scuola secondaria.
 
 Considera i seguenti parametri per la generazione della domanda:
 - Argomento fornito da genitori/professori: {argomento}
-                                     - Livello scolare: Scuola secondaria 
+                                     - Livello scolare: Scuola secondaria classe prima superiore di un ITIS Informatico (in cui studiano anche programmazione, economia, tpsi, sistemi e reti, fisica, chimica, storia, italiano, matematica, diritto)
 - Tipo di domanda desiderato: multipla
-Genera una domanda pertinente all'argomento e al livello scolare specificati. Se il tipo di domanda è "multipla", fornisci anche un array di 3-4 risposte plausibili e l'indice (a base zero) della risposta corretta.
+Genera una domanda pertinente all'argomento e al livello scolare specificati. Fornisci anche un array di 3-4 risposte plausibili e l'indice (a base zero) della risposta corretta. Evita di scrivere nella domanda 'con riferimento all'itis informatico'
 """),
             ],
         ),
@@ -44,6 +44,7 @@ Genera una domanda pertinente all'argomento e al livello scolare specificati. Se
         thinking_config = types.ThinkingConfig(
             thinking_budget=0,
         ),
+        temperature=1.2,
         response_mime_type="application/json",
         response_schema=genai.types.Schema(
                         type = genai.types.Type.OBJECT,
@@ -74,29 +75,24 @@ Genera una domanda pertinente all'argomento e al livello scolare specificati. Se
         testo += chunk.text
     return testo
 
-# --- Funzione Placeholder per Gemini ---
 def generate_question_from_gemini(topics):
-    """
-    Placeholder per la chiamata all'API di Gemini.
-    Restituisce una domanda fittizia in formato JSON basata sugli argomenti.
-    """
 
 
-    print(f"--- Chiamata Fittizia a Gemini con argomenti: {topics} ---")
+    print(f"--- Chiamata a Gemini con argomenti: {topics} ---")
     # Scegli un argomento a caso dalla lista fornita
     chosen_topic = random.choice(topics) if topics else "un argomento generico"
 
     domanda = generate(chosen_topic)
 
-    domanda = json_string.replace("'", "\"")
-
+#    domanda = domanda.replace("'", "\"")
+    data_dict = {}
 # Ora possiamo usare json.loads() per convertire la stringa in un dizionario Python
     try:
         data_dict = json.loads(domanda)
         print(data_dict)
     except json.JSONDecodeError as e:
         print(f"Errore nella decodifica JSON: {e}")
-        print(f"Stringa JSON non valida: {json_string}")
+        print(f"Stringa JSON non valida: {domanda}")
 
     # Genera casualmente un tipo di domanda
 #    question_type = random.choice(["multipla", "aperta"])
@@ -201,7 +197,6 @@ def student_view():
     if 'timer_running' not in session:
          session['timer_running'] = False
 
-    # Sfondi disponibili (solo nomi per ora)
     available_backgrounds = ["Default", "Forest", "Space", "Abstract"]
 
     return render_template('student.html',
@@ -297,60 +292,51 @@ def ask_question():
 
 @app.route('/submit_answer', methods=['POST'])
 def submit_answer():
-    """Verifica la risposta dello studente."""
-    if session.get('user_type') != 'student':
-        return redirect(url_for('index'))
-
+  
     question_data = session.get('current_question')
     if not question_data:
         # Se non c'è una domanda attiva, torna alla vista studente
         return redirect(url_for('student_view'))
 
-    user_answer = None
     is_correct = False
     correct_answer_display = "N/A" # Cosa mostrare come risposta corretta
 
     # Gestione risposta multipla
-    if question_data.get('tipo') == 'multipla':
-        user_answer_index = request.form.get('answer') # Ottiene l'indice selezionato
-        try:
-            user_answer_index = int(user_answer_index)
-            correct_index = question_data.get('indice_risposta_corretta')
-            if user_answer_index == correct_index:
-                is_correct = True
-            # Prendi il testo della risposta corretta per mostrarlo
-            if correct_index is not None and 0 <= correct_index < len(question_data.get('risposte', [])):
-                correct_answer_display = question_data['risposte'][correct_index]
-            else:
-                 correct_answer_display = "(Indice corretto non valido)"
-        except (ValueError, TypeError):
-            # Gestisce il caso in cui l'indice non sia un numero valido
-            pass # is_correct rimane False
-
-    # Gestione risposta aperta
-    elif question_data.get('tipo') == 'aperta':
-        user_answer = request.form.get('answer')
-        # Per le domande aperte, non c'è una verifica automatica in questo prototipo
-        # Consideriamo la risposta "corretta" ai fini del bonus tempo, ma potresti
-        # implementare una logica più complessa (es. keyword matching o valutazione AI)
-        is_correct = True # Placeholder: consideriamo sempre corretto per il bonus
-        correct_answer_display = "(Domanda Aperta - Verifica Manuale Necessaria)"
+    user_answer_index = request.form.get('answer') # Ottiene l'indice selezionato
+    try:
+        user_answer_index = int(user_answer_index)
+        print(f"user_answer_index: {user_answer_index}")
+        correct_index = question_data.get('indice_risposta_corretta')
+        print(f"+++++++++correct_index: {correct_index}")
+        if user_answer_index == correct_index:
+            is_correct = True
+        # Prendi il testo della risposta corretta per mostrarlo
+        if correct_index is not None and 0 <= correct_index < len(question_data.get('risposte', [])):
+            correct_answer_display = question_data['risposte'][correct_index]
+        else:
+                correct_answer_display = "(Indice corretto non valido)"
+    except (ValueError, TypeError):
+        # Gestisce il caso in cui l'indice non sia un numero valido
+        pass # is_correct rimane False
 
     # Prepara il messaggio di risultato
     if is_correct:
         message = f"Risposta Corretta!"
         # Applica bonus tempo solo se la risposta è corretta
         current_remaining = session.get('time_remaining', 0)
-        new_time = current_remaining + CORRECT_ANSWER_BONUS
+        new_time = CORRECT_ANSWER_BONUS
         session['time_remaining'] = new_time
         # Aggiorna anche il limite (per coerenza se il timer riparte)
-        session['time_limit'] = session.get('time_limit', DEFAULT_TIME_LIMIT) + CORRECT_ANSWER_BONUS
+        session['time_limit'] = session.get('time_limit', DEFAULT_TIME_LIMIT)
         message += f" Hai guadagnato {CORRECT_ANSWER_BONUS} secondi bonus!"
         session['score'] = session.get('score', 0) + 1 # Incrementa punteggio
+        session.pop('current_question', None)
+
     else:
-        message = f"Risposta Errata."
-        if question_data.get('tipo') == 'multipla':
-             message += f" La risposta corretta era: '{correct_answer_display}'"
+        message = correct_answer_display
+        session.pop('current_question', None)
+        return render_template('result_errata.html', message=message)
+
 
     # Rimuovi la domanda corrente dalla sessione dopo averla processata
     session.pop('current_question', None)

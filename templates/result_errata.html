@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERRORE!</title>
+    <style>
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            20% { transform: translateX(-15px); }
+            40% { transform: translateX(15px); }
+            60% { transform: translateX(-15px); }
+            80% { transform: translateX(15px); }
+            100% { transform: translateX(0); }
+        }
+
+        @keyframes flash {
+            0%, 100% { color: #fff; background-color: #ff0000; }
+            50% { color: #ff0000; background-color: #fff; }
+        }
+
+        body {
+            font-family: 'Arial Black', sans-serif;
+            max-width: 700px;
+            margin: 50px auto;
+            padding: 40px;
+            border: 5px solid #ff0000;
+            border-radius: 12px;
+            text-align: center;
+            background-color: #ffe5e5;
+            box-shadow: 0 0 25px #ff0000;
+        }
+
+        h1 {
+            color: white;
+            background-color: #ff0000;
+            padding: 20px;
+            border-radius: 8px;
+            font-size: 2.5em;
+            animation: shake 1s ease-in-out, flash 1s infinite;
+        }
+
+        p {
+            font-size: 1.4em;
+            color: #990000;
+            font-weight: bold;
+            margin: 30px 0;
+        }
+
+        a {
+            display: inline-block;
+            padding: 12px 25px;
+            background-color: #cc0000;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 1.1em;
+            box-shadow: 0 0 10px #cc0000;
+        }
+
+        a:hover {
+            background-color: #990000;
+            box-shadow: 0 0 15px #990000;
+        }
+    </style>
+</head>
+<body>
+    <h1>❌ Risposta errata!</h1>
+    <p>
+        Hai sbagliato! <br>
+        La risposta corretta era: <strong>{{message}}</strong>. <br>
+        Torna a studiare! Niente tempo bonus per te!
+    </p>
+    <a href="{{ url_for('ask_question') }}">🔁 Ritenta.</a>
+
+
+</body>
+</html>

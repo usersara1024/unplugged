@@ -116,13 +116,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // 1. Gestione Sfondo Iniziale e Selezione
     if (bgSelect) {
         // Lista sfondi (deve corrispondere ai valori 'value' e classi CSS)
-         const availableBackgrounds = ['default', 'forest', 'space', 'abstract'];
+         const availableBackgrounds = ['abstract', 'forest', 'space', 'default'];
 
          // Imposta lo sfondo iniziale su 'default' o sul valore selezionato se valido
          let initialBg = bgSelect.value;
          if (!availableBackgrounds.includes(initialBg)) {
              console.warn(`Valore iniziale sfondo '${initialBg}' non valido, uso default.`);
-             initialBg = 'default';
+             initialBg = 'Abstract';
              bgSelect.value = initialBg; // Aggiorna il dropdown
          }
          applyBackground(initialBg);
@@ -135,14 +135,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 // try { localStorage.setItem('backgroundPreference', this.value); } catch(e){}
             } else {
                  console.warn(`Valore selezionato '${this.value}' non valido.`);
-                 applyBackground('default'); // Fallback a default
-                 this.value = 'default'; // Resetta dropdown
+                 applyBackground('Abstract'); // Fallback a default
+                 this.value = 'Abstract'; // Resetta dropdown
             }
         });
          console.log("Listener per cambio sfondo aggiunto.");
     } else {
          // Se non c'è selettore, applica default
-         applyBackground('default');
+         applyBackground('Abstract');
     }
 
 
@@ -162,7 +162,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.log("Risposta da /start_timer:", data);
                     if (data.success) {
                         console.log("Avvio timer Riuscito.");
-                        if (controlsDiv) controlsDiv.innerHTML = "<p>Sessione di studio in corso...</p>";
+                        if (controlsDiv) controlsDiv.innerHTML = "<p>Puoi utilizzare il cellulare...</p>";
 
                         // Pulisci intervalli vecchi e avvia quello nuovo
                         if (timerInterval) clearInterval(timerInterval);
