@@ -1,6 +1,9 @@
 import os
-
-import os
+from pathlib import Path
+from dotenv import load_dotenv
+# carica .env dalla cartella dove sta questo file        
+env_path = Path(__file__).resolve().parent / ".env"
+load_dotenv(dotenv_path=env_path)    # senza argomenti cerca automaticamente un .env “in alto” nella gerarchia
 from google import genai
 from google.genai import types
 import json
@@ -16,11 +19,11 @@ app.secret_key = os.urandom(24)
 DEFAULT_TIME_LIMIT = 10  # 10 minuti
 CORRECT_ANSWER_BONUS = 10 # 30 secondi bonus
 
-
+API_KEY=os.getenv("API_KEY")
 
 def generate(argomento):
     client = genai.Client(
-        api_key=os.environ.get("GEMINI_API_KEY"),
+       api_key=API_KEY
     )
 
     model = "gemini-2.0-flash"
